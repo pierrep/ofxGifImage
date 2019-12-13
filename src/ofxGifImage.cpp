@@ -7,7 +7,7 @@ ofxGifImage::ofxGifImage()
 {
     numColours = 256;
     ditherMode = OFX_GIF_DITHER_NONE;
-
+    defaultFrameDuration = OFX_GIF_DEFAULT_FRAME_DELAY;
     clear();
 }
 
@@ -93,6 +93,18 @@ void ofxGifImage::append(ofPixels& pixels)
 }
 
 //-----------------------------------------------------------------------
+void ofxGifImage::setDefaultFrameDuration(float duration)
+{
+    defaultFrameDuration = duration;
+}
+
+//-----------------------------------------------------------------------
+unsigned int ofxGifImage::getNumFrames()
+{
+    return frames.size();
+}
+
+//-----------------------------------------------------------------------
 void ofxGifImage::draw(float x, float y)
 {
     if (frames.size() == 0) {
@@ -144,9 +156,7 @@ void ofxGifImage::updateFrameIndex()
     }
     if ((ofGetElapsedTimef() - lastDrawn) >= frames[frameIndex].duration) {
         float diff = (ofGetElapsedTimef() - lastDrawn) - frames[frameIndex].duration;
-        //cout << "diff = " << diff;
         lastDrawn = ofGetElapsedTimef() - diff;
-        //lastDrawn = ofGetElapsedTimef();
         frameIndex++;
         frameIndex %= frames.size();
     }
@@ -159,9 +169,20 @@ void ofxGifImage::clear()
     accumPx.clear();
     frames.clear();
     palette.clear();
-    defaultFrameDuration = OFX_GIF_DEFAULT_FRAME_DELAY;
     frameIndex = 0;
     lastDrawn = 0;
+}
+
+//-----------------------------------------------------------------------
+void ofxGifImage::setNumColours(int colours)
+{
+    numColours = colours;
+}
+
+//-----------------------------------------------------------------------
+void ofxGifImage::setDither(GifDitherType type)
+{
+    ditherMode = type;
 }
 
 //-----------------------------------------------------------------------
@@ -343,7 +364,7 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
     // get the pixel format
     ofLogVerbose() << "Encoding frame of pixel format: " << getPixelFormatString(frame.pixels);
 #ifdef TARGET_LITTLE_ENDIAN
-    if (frame.pixels.getPixelFormat() == OF_PIXELS_RGBA) {
+    if ((frame.pixels.getPixelFormat() == OF_PIXELS_RGBA) || (frame.pixels.getPixelFormat() == OF_PIXELS_RGB)) {
         frame.pixels.swapRgb();
     }
 #endif

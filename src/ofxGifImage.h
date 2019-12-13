@@ -10,7 +10,7 @@ enum GifFrameDisposal {
     GIF_DISPOSAL_PREVIOUS
 };
 
-enum ditherTypes {
+enum GifDitherType {
     OFX_GIF_DITHER_NONE         = -1,
     OFX_GIF_DITHER_FS           = FID_FS,           // Floyd & Steinberg error diffusion
     OFX_GIF_DITHER_BAYER4x4     = FID_BAYER4x4,		// Bayer ordered dispersed dot dithering (order 2 dithering matrix)
@@ -45,7 +45,11 @@ public:
     void draw(float x, float y, float w, float h);
     void drawFrame(int frameNum, float x, float y);
     void drawFrame(int frameNum, float x, float y, int w, int h);
+    void setDefaultFrameDuration(float duration);
+    unsigned int getNumFrames();
     void clear();
+    void setNumColours(int numColours);
+    void setDither(GifDitherType dither);
 
 protected:
 

@@ -3,36 +3,56 @@
 //--------------------------------------------------------------
 void ofApp::setup()
 {
-    ofSetLogLevel(OF_LOG_VERBOSE);
-
-   //bLoaded = gif.load("test.gif");
+    videoGrabber.setup(640, 480);
+    frameDelay = 0.15f;
+    bDoCapture = false;
+    frameTimer = 0;
+    gif.setDefaultFrameDuration(0.06f);
+    gif.setNumColours(64);
+    //gif.setDither(OFX_GIF_DITHER_FS);
 }
 
 //--------------------------------------------------------------
 void ofApp::update()
 {
+    videoGrabber.update();
+    if (videoGrabber.isFrameNew()) {
+
+        if (frameTimer == 0) {
+            frameTimer = ofGetElapsedTimef();
+        }
+        if (bDoCapture) {
+            if ((ofGetElapsedTimef() - frameTimer) >= frameDelay) {
+                float diff = (ofGetElapsedTimef() - frameTimer) - frameDelay;
+                frameTimer = ofGetElapsedTimef() - diff;
+
+                gif.append(videoGrabber.getPixels());
+            }
+        }
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw()
 {
-   //gif.draw(0, 0);
-
-    ofBackground(255,255,0);
-    ofNoFill();
-    ofSetColor(0,0,255);
-    ofDrawCircle(ofGetMouseX(), ofGetMouseY(), 50);
+    videoGrabber.draw(0, 0);
+    if (gif.getNumFrames() > 0) {
+        gif.draw(640, 0);
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key)
 {
-    if (key == ' ')
-        gif.save("test.gif");
-    if (key == 'a') {
-        ofImage img;
-        img.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
-        gif.append(img.getPixels());
+    if (key == ' ') {
+        bDoCapture = !bDoCapture;
+        if (bDoCapture) {
+            gif.clear();
+            frameTimer = 0;
+        } else if (gif.getNumFrames() > 0) {
+            gif.save("animation.gif");
+            gif.load("animation.gif");
+        }
     }
 }
 
