@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup()
 {
-    videoGrabber.setup(640, 480);
+    bool bHasCamera = videoGrabber.setup(640, 480);
     frameDelay = 0.15f;
     bDoCapture = false;
     frameTimer = 0;
@@ -15,18 +15,20 @@ void ofApp::setup()
 //--------------------------------------------------------------
 void ofApp::update()
 {
-    videoGrabber.update();
-    if (videoGrabber.isFrameNew()) {
+    if (bHasCamera) {
+        videoGrabber.update();
+        if (videoGrabber.isFrameNew()) {
 
-        if (frameTimer == 0) {
-            frameTimer = ofGetElapsedTimef();
-        }
-        if (bDoCapture) {
-            if ((ofGetElapsedTimef() - frameTimer) >= frameDelay) {
-                float diff = (ofGetElapsedTimef() - frameTimer) - frameDelay;
-                frameTimer = ofGetElapsedTimef() - diff;
+            if (frameTimer == 0) {
+                frameTimer = ofGetElapsedTimef();
+            }
+            if (bDoCapture) {
+                if ((ofGetElapsedTimef() - frameTimer) >= frameDelay) {
+                    float diff = (ofGetElapsedTimef() - frameTimer) - frameDelay;
+                    frameTimer = ofGetElapsedTimef() - diff;
 
-                gif.append(videoGrabber.getPixels());
+                    gif.append(videoGrabber.getPixels());
+                }
             }
         }
     }
@@ -35,9 +37,26 @@ void ofApp::update()
 //--------------------------------------------------------------
 void ofApp::draw()
 {
-    videoGrabber.draw(0, 0);
-    if (gif.getNumFrames() > 0) {
-        gif.draw(640, 0);
+    ofLine(ofGetWidth()/2,0,ofGetWidth()/2,ofGetHeight());
+
+    if (bHasCamera) {
+        videoGrabber.draw(0, 0);
+    } else {
+        ofDrawBitmapString("NO CAMERA", ofGetWidth()/4,ofGetHeight()/2);
+    }
+
+
+    if (bDoCapture) {
+        ofPushStyle();
+        ofSetColor(255, 0, 0);
+        ofDrawCircle(30, 30, 10);
+        ofPopStyle();
+    }
+
+    if (!bDoCapture) {
+        if (gif.getNumFrames() > 0) {
+            gif.draw(640, 0);
+        }
     }
 }
 
@@ -50,8 +69,18 @@ void ofApp::keyPressed(int key)
             gif.clear();
             frameTimer = 0;
         } else if (gif.getNumFrames() > 0) {
-            gif.save("animation.gif");
-            gif.load("animation.gif");
+            string timestamp = ofGetTimestampString();
+            string filename = "animation" + timestamp + ".gif";
+
+#ifdef TARGET_LINUX
+            filename = "~/Pictures/" + filename;
+            gif.save(filename, true);
+
+#else
+            gif.save(filename);
+#endif
+
+            gif.load(filename);
         }
     }
 }

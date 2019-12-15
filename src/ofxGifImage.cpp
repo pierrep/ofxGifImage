@@ -1,6 +1,7 @@
 #include "ofxGifImage.h"
 
 #define OFX_GIF_DEFAULT_FRAME_DELAY 0.1f
+#define SAVE_TO_CUSTOM_FOLDER 1
 
 //-----------------------------------------------------------------------
 ofxGifImage::ofxGifImage()
@@ -8,6 +9,9 @@ ofxGifImage::ofxGifImage()
     numColours = 256;
     ditherMode = OFX_GIF_DITHER_NONE;
     defaultFrameDuration = OFX_GIF_DEFAULT_FRAME_DELAY;
+#ifdef SAVE_TO_CUSTOM_FOLDER
+    customFolder = "~/Pictures/";
+#endif
     clear();
 }
 
@@ -59,12 +63,18 @@ bool ofxGifImage::load(string filename)
 }
 
 //-----------------------------------------------------------------------
-void ofxGifImage::save(string filename)
+void ofxGifImage::save(string filename, bool bAbsolutePath)
 {
+    string savefilename;
+    if (bAbsolutePath) {
+        savefilename = filename;
+    } else {
+        savefilename = ofToDataPath(filename);
+    }
 
     // create a multipage bitmap
-    FIMULTIBITMAP* multi = FreeImage_OpenMultiBitmap(FIF_GIF, ofToDataPath(filename).c_str(), TRUE, FALSE);
-    for (int i = 0; i < frames.size(); i++) {
+    FIMULTIBITMAP* multi = FreeImage_OpenMultiBitmap(FIF_GIF, savefilename.c_str(), TRUE, FALSE);
+    for (unsigned int i = 0; i < frames.size(); i++) {
         GifFrame currentFrame = frames[i];
         encodeFrame(currentFrame, multi);
     }
@@ -74,6 +84,19 @@ void ofxGifImage::save(string filename)
 //-----------------------------------------------------------------------
 void ofxGifImage::append(string filename)
 {
+    ofImage img;
+    img.load(filename);
+    GifFrame frame;
+    frame.pixels = img.getPixels();
+    frame.width = img.getWidth();
+    frame.height = img.getHeight();
+    frame.bpp = img.getPixels().getBitsPerPixel();
+    frame.duration = defaultFrameDuration;
+    frame.top = 0;
+    frame.left = 0;
+    frame.tex.loadData(img.getPixels());
+
+    frames.push_back(frame);
 }
 
 //-----------------------------------------------------------------------
@@ -242,7 +265,7 @@ void ofxGifImage::decodeFrame(FIBITMAP* bmp)
     tag = nullptr;
     if (FreeImage_GetMetadata(FIMD_ANIMATION, bmp, "FrameTime", &tag)) {
         if (tag != nullptr) {
-            uint32_t* frameTime = (uint32_t *) FreeImage_GetTagValue(tag);
+            uint32_t* frameTime = (uint32_t*)FreeImage_GetTagValue(tag);
             ofLogVerbose() << "Tag type: " << FreeImage_GetTagType(tag);
             ofLogVerbose() << "Tag count: " << FreeImage_GetTagCount(tag);
             ofLogVerbose() << "Frame Time: " << *frameTime;

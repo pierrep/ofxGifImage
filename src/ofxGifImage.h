@@ -38,7 +38,7 @@ public:
     ofxGifImage();
 
     bool load(string filename);
-    void save(string filename);
+    void save(string filename, bool bAbsolutePath = false);
     void append(string filename);
     void append(ofPixels& pixels);
     void draw(float x, float y);
@@ -70,6 +70,7 @@ protected:
     int frameIndex;
     int numColours;
     int ditherMode;
+    string customFolder;
 
 private:
 

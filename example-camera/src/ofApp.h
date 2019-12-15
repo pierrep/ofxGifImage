@@ -26,4 +26,5 @@ public:
     float frameTimer;
     float frameDelay;
     bool bDoCapture;
+    bool bHasCamera;
 };
