@@ -19,7 +19,6 @@ void ofApp::draw()
    //gif.draw(0, 0);
 
     ofBackground(255,255,0);
-    ofNoFill();
     ofSetColor(0,0,255);
     ofDrawCircle(ofGetMouseX(), ofGetMouseY(), 50);
 }

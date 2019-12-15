@@ -94,6 +94,7 @@ void ofxGifImage::append(string filename)
     frame.duration = defaultFrameDuration;
     frame.top = 0;
     frame.left = 0;
+    frame.disposal = GIF_DISPOSAL_UNSPECIFIED;
     frame.tex.loadData(img.getPixels());
 
     frames.push_back(frame);
@@ -110,6 +111,7 @@ void ofxGifImage::append(ofPixels& pixels)
     frame.duration = defaultFrameDuration;
     frame.top = 0;
     frame.left = 0;
+    frame.disposal = GIF_DISPOSAL_UNSPECIFIED;
     frame.tex.loadData(pixels);
 
     frames.push_back(frame);
@@ -386,11 +388,16 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
 
     // get the pixel format
     ofLogVerbose() << "Encoding frame of pixel format: " << getPixelFormatString(frame.pixels);
+
 #ifdef TARGET_LITTLE_ENDIAN
     if ((frame.pixels.getPixelFormat() == OF_PIXELS_RGBA) || (frame.pixels.getPixelFormat() == OF_PIXELS_RGB)) {
         frame.pixels.swapRgb();
     }
 #endif
+
+    // force RGB to save space - needs to be after the swapRgb. Make optional?
+    frame.pixels.setNumChannels(3);
+    frame.bpp = frame.pixels.getBitsPerPixel();
 
     // get the pixel data
     bmp = FreeImage_ConvertFromRawBits(frame.pixels.getData(), frame.width, frame.height, frame.width * (frame.bpp / 8), frame.bpp, 0, 0, 0, true);
@@ -398,7 +405,12 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
     FIBITMAP* ditheredBmp = nullptr;
     FIBITMAP* processedBmp = nullptr;
 
-    quantizedBmp = FreeImage_ColorQuantizeEx(bmp, FIQ_WUQUANT, numColours);
+    //if (frame.bpp == 24)
+    //{
+    //    quantizedBmp = FreeImage_ColorQuantizeEx(bmp, FIQ_NNQUANT, numColours);
+    //} else {
+        quantizedBmp = FreeImage_ColorQuantizeEx(bmp, FIQ_WUQUANT, numColours);
+    //}
     processedBmp = quantizedBmp;
 
     // TODO : deal with transparency?
