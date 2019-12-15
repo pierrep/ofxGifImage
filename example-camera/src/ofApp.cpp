@@ -13,6 +13,8 @@ void ofApp::setup()
     frameTimer = 0;
     gif.setDefaultFrameDuration(0.06f);
     gif.setNumColours(64);
+    prevPixels.allocate(640,480,OF_PIXELS_RGBA);
+    ofSetLogLevel(OF_LOG_VERBOSE);
     //gif.setDither(OFX_GIF_DITHER_FS);
 }
 
@@ -36,7 +38,7 @@ void ofApp::update()
                     p.allocate(pixels.getWidth(), pixels.getHeight(), OF_PIXELS_RGBA);
                     for (int y = 0; y < pixels.getHeight(); y++) {
                         for (int x = 0; x < pixels.getWidth(); x++) {
-                            unsigned int index = pixels.getPixelIndex(x, y);
+                            unsigned int index = p.getPixelIndex(x, y);
                             ofColor c1 = prevPixels.getColor(x, y);
                             ofColor c2 = pixels.getColor(x, y);
                             ofColor c;
