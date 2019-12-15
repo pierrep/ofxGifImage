@@ -5,7 +5,7 @@ void ofApp::setup()
 {
     ofSetLogLevel(OF_LOG_VERBOSE);
     prevPixels.allocate(ofGetWidth(), ofGetHeight(), OF_PIXELS_RGBA);
-//   bLoaded = gif.load("test.gif");
+    //bLoaded = gif.load("test.gif");
 }
 
 //--------------------------------------------------------------
@@ -16,7 +16,7 @@ void ofApp::update()
 //--------------------------------------------------------------
 void ofApp::draw()
 {
-//    gif.draw(0, 0);
+    //gif.draw(0, 0);
 
     ofBackground(255, 255, 0);
     ofSetColor(0, 0, 255);
@@ -52,7 +52,7 @@ void ofApp::keyPressed(int key)
         }
         prevPixels = pixels;
         //gif.append(image.getPixels());
-        gif.setTransparentColour(ofColor(0,0,0));
+        gif.setTransparentColour(ofColor(0, 0, 0));
         gif.setTransparency(true);
         gif.append(p);
     }
