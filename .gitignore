@@ -3,5 +3,10 @@ example-camera/bin/example-camera_debug
 example-camera/bin/example
 example-camera/build/
 */build/
+example-camera/bin/example-camera
+example-save/bin/data/test.gif
+example-save/bin/example-save
+example-save/bin/example-save_debug
+
 
 

@@ -23,4 +23,5 @@ class ofApp : public ofBaseApp{
 		
         ofxGifImage gif;
          bool bLoaded;
+         ofPixels prevPixels;
 };
