@@ -46,7 +46,7 @@ void ofApp::draw()
     if (bHasCamera) {
         videoGrabber.draw(0, 0);
     } else {
-        ofDrawBitmapString("NO CAMERA", ofGetWidth() / 4, ofGetHeight() / 2);
+        ofDrawBitmapString("NO CAMERA", ofGetWidth() / 4 - 30, ofGetHeight() / 2);
     }
 
     if (bDoCapture) {
@@ -54,11 +54,12 @@ void ofApp::draw()
         ofSetColor(255, 0, 0);
         ofDrawCircle(30, 30, 10);
         ofPopStyle();
-    }
-
-    if (!bDoCapture) {
+    } else {
         if (gif.getNumFrames() > 0) {
             gif.draw(640, 0);
+        }
+        else {
+          ofDrawBitmapString("SPACEBAR TO RECORD", ofGetWidth() *0.75f - 60, ofGetHeight() / 2);
         }
     }
 }
@@ -82,7 +83,6 @@ void ofApp::keyPressed(int key)
 #else
             gif.save(filename);
 #endif
-
             gif.load(filename);
         }
     }
