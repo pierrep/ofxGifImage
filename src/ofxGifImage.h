@@ -50,6 +50,8 @@ public:
     void clear();
     void setNumColours(int numColours);
     void setDither(GifDitherType dither);
+    void setTransparency(bool value);
+    void setTransparentColour(ofColor c);
 
 protected:
 
@@ -70,6 +72,8 @@ protected:
     int frameIndex;
     int numColours;
     int ditherMode;
+    bool bSetTransparency;
+    ofColor transparentColour;
     string customFolder;
 
 private:

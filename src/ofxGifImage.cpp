@@ -9,6 +9,8 @@ ofxGifImage::ofxGifImage()
     numColours = 256;
     ditherMode = OFX_GIF_DITHER_NONE;
     defaultFrameDuration = OFX_GIF_DEFAULT_FRAME_DELAY;
+    transparentColour = ofColor::black;
+    bSetTransparency = false;
 #ifdef SAVE_TO_CUSTOM_FOLDER
     customFolder = "~/Pictures/";
 #endif
@@ -94,7 +96,7 @@ void ofxGifImage::append(string filename)
     frame.duration = defaultFrameDuration;
     frame.top = 0;
     frame.left = 0;
-    frame.disposal = GIF_DISPOSAL_UNSPECIFIED;
+    frame.disposal = GIF_DISPOSAL_LEAVE;
     frame.tex.loadData(img.getPixels());
 
     frames.push_back(frame);
@@ -111,7 +113,7 @@ void ofxGifImage::append(ofPixels& pixels)
     frame.duration = defaultFrameDuration;
     frame.top = 0;
     frame.left = 0;
-    frame.disposal = GIF_DISPOSAL_UNSPECIFIED;
+    frame.disposal = GIF_DISPOSAL_LEAVE;
     frame.tex.loadData(pixels);
 
     frames.push_back(frame);
@@ -211,6 +213,18 @@ void ofxGifImage::setDither(GifDitherType type)
 }
 
 //-----------------------------------------------------------------------
+void ofxGifImage::setTransparency(bool value)
+{
+    bSetTransparency = value;
+}
+
+//-----------------------------------------------------------------------
+void ofxGifImage::setTransparentColour(ofColor c)
+{
+    transparentColour = c;
+}
+
+//-----------------------------------------------------------------------
 void ofxGifImage::getMetadata(FIBITMAP* bmp)
 {
     FITAG* tag;
@@ -238,6 +252,7 @@ void ofxGifImage::getMetadata(FIBITMAP* bmp)
     RGBQUAD bgColor;
     if (FreeImage_GetBackgroundColor(bmp, &bgColor)) {
         backgroundColour = ofColor(bgColor.rgbRed, bgColor.rgbGreen, bgColor.rgbBlue);
+        ofLogVerbose() << "Background colour: " << backgroundColour;
     }
 }
 
@@ -247,7 +262,6 @@ void ofxGifImage::decodeFrame(FIBITMAP* bmp)
     FITAG* tag = nullptr;
     ofPixels pix;
     GifFrame frame;
-    GifFrameDisposal disposal_method = GIF_DISPOSAL_BACKGROUND;
 
     if (FreeImage_GetMetadata(FIMD_ANIMATION, bmp, "FrameLeft", &tag)) {
         if (tag != nullptr) {
@@ -286,6 +300,7 @@ void ofxGifImage::decodeFrame(FIBITMAP* bmp)
     if (FreeImage_GetMetadata(FIMD_ANIMATION, bmp, "DisposalMethod", &tag)) {
         if (tag != nullptr) {
             frame.disposal = (GifFrameDisposal) * (unsigned char*)FreeImage_GetTagValue(tag);
+            ofLogVerbose() << "Frame Disposal: " << frame.disposal;
         }
     }
 
@@ -396,8 +411,8 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
 #endif
 
     // force RGB to save space - needs to be after the swapRgb. Make optional?
-    frame.pixels.setNumChannels(3);
-    frame.bpp = frame.pixels.getBitsPerPixel();
+    //frame.pixels.setNumChannels(3);
+    //frame.bpp = frame.pixels.getBitsPerPixel();
 
     // get the pixel data
     bmp = FreeImage_ConvertFromRawBits(frame.pixels.getData(), frame.width, frame.height, frame.width * (frame.bpp / 8), frame.bpp, 0, 0, 0, true);
@@ -409,15 +424,26 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
     //{
     //    quantizedBmp = FreeImage_ColorQuantizeEx(bmp, FIQ_NNQUANT, numColours);
     //} else {
-        quantizedBmp = FreeImage_ColorQuantizeEx(bmp, FIQ_WUQUANT, numColours);
+    quantizedBmp = FreeImage_ColorQuantizeEx(bmp, FIQ_WUQUANT, numColours);
     //}
     processedBmp = quantizedBmp;
 
-    // TODO : deal with transparency?
-    //    if (nChannels == 4){
-    //        calculatePalette(processedBmp);
-    //        FreeImage_SetTransparentIndex(processedBmp,getClosestToGreenScreenPaletteColorIndex());
-    //    }
+    // set transparency
+    if (bSetTransparency) {
+        RGBQUAD* Palette = FreeImage_GetPalette(processedBmp);
+        BYTE Transparency[numColours];
+        for (unsigned i = 0; i < numColours; i++) {
+            Transparency[i] = 0xFF;
+            unsigned char r = transparentColour.r;
+            unsigned char g = transparentColour.g;
+            unsigned char b = transparentColour.b;
+            if ((Palette[i].rgbRed >= r) && (Palette[i].rgbGreen == g) && (Palette[i].rgbBlue == b)) {
+                Transparency[i] = 0x00;
+            }
+        }
+        // set the tranparency table
+        FreeImage_SetTransparencyTable(processedBmp, Transparency, numColours);
+    }
 
     if (ditherMode > OFX_GIF_DITHER_NONE) {
         ditheredBmp = FreeImage_Dither(processedBmp, (FREE_IMAGE_DITHER)ditherMode);
@@ -439,6 +465,15 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
         FreeImage_SetTagLength(tag, 4);
         FreeImage_SetTagValue(tag, &frameDuration);
         FreeImage_SetMetadata(FIMD_ANIMATION, processedBmp, FreeImage_GetTagKey(tag), tag);
+
+        uint8_t disposal = frame.disposal;
+        FreeImage_SetTagKey(tag, "DisposalMethod");
+        FreeImage_SetTagType(tag, FIDT_BYTE);
+        FreeImage_SetTagCount(tag, 1);
+        FreeImage_SetTagLength(tag, 1);
+        FreeImage_SetTagValue(tag, &disposal);
+        FreeImage_SetMetadata(FIMD_ANIMATION, processedBmp, FreeImage_GetTagKey(tag), tag);
+
         FreeImage_DeleteTag(tag);
     }
 

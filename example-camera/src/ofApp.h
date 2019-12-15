@@ -27,4 +27,5 @@ public:
     float frameDelay;
     bool bDoCapture;
     bool bHasCamera;
+    ofPixels prevPixels;
 };
