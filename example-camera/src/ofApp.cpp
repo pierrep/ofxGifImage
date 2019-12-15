@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup()
 {
-    bool bHasCamera = videoGrabber.setup(640, 480);
+    bHasCamera = videoGrabber.setup(640, 480);
     frameDelay = 0.15f;
     bDoCapture = false;
     frameTimer = 0;
