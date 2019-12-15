@@ -1,5 +1,9 @@
 #include "ofApp.h"
 
+#ifdef TARGET_LINUX
+#include <pwd.h>
+#endif
+
 //--------------------------------------------------------------
 void ofApp::setup()
 {
@@ -37,14 +41,13 @@ void ofApp::update()
 //--------------------------------------------------------------
 void ofApp::draw()
 {
-    ofLine(ofGetWidth()/2,0,ofGetWidth()/2,ofGetHeight());
+    ofDrawLine(ofGetWidth() / 2, 0, ofGetWidth() / 2, ofGetHeight());
 
     if (bHasCamera) {
         videoGrabber.draw(0, 0);
     } else {
-        ofDrawBitmapString("NO CAMERA", ofGetWidth()/4,ofGetHeight()/2);
+        ofDrawBitmapString("NO CAMERA", ofGetWidth() / 4, ofGetHeight() / 2);
     }
-
 
     if (bDoCapture) {
         ofPushStyle();
@@ -73,9 +76,9 @@ void ofApp::keyPressed(int key)
             string filename = "animation" + timestamp + ".gif";
 
 #ifdef TARGET_LINUX
-            filename = "~/Pictures/" + filename;
+            ofFilePath path;
+            filename = path.getUserHomeDir() + "/Pictures/" + filename;
             gif.save(filename, true);
-
 #else
             gif.save(filename);
 #endif
