@@ -411,8 +411,8 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
 #endif
 
     // force RGB to save space - needs to be after the swapRgb. Make optional?
-    //frame.pixels.setNumChannels(3);
-    //frame.bpp = frame.pixels.getBitsPerPixel();
+    frame.pixels.setNumChannels(3);
+    frame.bpp = frame.pixels.getBitsPerPixel();
 
     // get the pixel data
     bmp = FreeImage_ConvertFromRawBits(frame.pixels.getData(), frame.width, frame.height, frame.width * (frame.bpp / 8), frame.bpp, 0, 0, 0, true);
