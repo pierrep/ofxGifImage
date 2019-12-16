@@ -7,15 +7,17 @@
 //--------------------------------------------------------------
 void ofApp::setup()
 {
+    //ofSetLogLevel(OF_LOG_VERBOSE);
+    ofBackground(0, 0, 0);
+
     bHasCamera = videoGrabber.setup(640, 480);
     frameDelay = 0.15f;
     bDoCapture = false;
     frameTimer = 0;
     gif.setDefaultFrameDuration(0.06f);
     gif.setNumColours(64);
-    prevPixels.allocate(640,480,OF_PIXELS_RGBA);
-    ofSetLogLevel(OF_LOG_VERBOSE);
-    //gif.setDither(OFX_GIF_DITHER_FS);
+    gif.setTransparencyOptimisation(false);
+    //gif.setDither(OFX_GIF_DITHER_CLUSTER6x6);
 }
 
 //--------------------------------------------------------------
@@ -33,31 +35,7 @@ void ofApp::update()
                     float diff = (ofGetElapsedTimef() - frameTimer) - frameDelay;
                     frameTimer = ofGetElapsedTimef() - diff;
 
-                    ofPixels pixels = videoGrabber.getPixels();
-                    ofPixels p;
-                    p.allocate(pixels.getWidth(), pixels.getHeight(), OF_PIXELS_RGBA);
-                    for (int y = 0; y < pixels.getHeight(); y++) {
-                        for (int x = 0; x < pixels.getWidth(); x++) {
-                            unsigned int index = p.getPixelIndex(x, y);
-                            ofColor c1 = prevPixels.getColor(x, y);
-                            ofColor c2 = pixels.getColor(x, y);
-                            ofColor c;
-                            if (c1 == c2) {
-                                c = ofColor(0);
-                                c.a = 0;
-                            } else {
-                                c = c2;
-                                c.a = 255;
-                            }
-                            p.setColor(index, c);
-                        }
-                    }
-                    prevPixels = pixels;
-                    gif.setTransparentColour(ofColor(0,0,0));
-                    gif.setTransparency(true);
-
-                    //gif.append(videoGrabber.getPixels());
-                    gif.append(p);
+                    gif.append(videoGrabber.getPixels());
                 }
             }
         }
@@ -83,9 +61,8 @@ void ofApp::draw()
     } else {
         if (gif.getNumFrames() > 0) {
             gif.draw(640, 0);
-        }
-        else {
-          ofDrawBitmapString("SPACEBAR TO RECORD", ofGetWidth() *0.75f - 60, ofGetHeight() / 2);
+        } else {
+            ofDrawBitmapString("SPACEBAR TO RECORD", ofGetWidth() * 0.75f - 60, ofGetHeight() / 2);
         }
     }
 }

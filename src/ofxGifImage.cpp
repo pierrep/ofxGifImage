@@ -9,12 +9,12 @@ ofxGifImage::ofxGifImage()
     numColours = 256;
     ditherMode = OFX_GIF_DITHER_NONE;
     defaultFrameDuration = OFX_GIF_DEFAULT_FRAME_DELAY;
-    transparentColour = ofColor::black;
-    bSetTransparency = false;
+    bSetTransparencyOptimisation = false;
 #ifdef SAVE_TO_CUSTOM_FOLDER
     customFolder = "~/Pictures/";
 #endif
     clear();
+    previousBmp = nullptr;
 }
 
 //-----------------------------------------------------------------------
@@ -39,7 +39,7 @@ bool ofxGifImage::load(string filename)
 
         // num frames
         int frameCount = FreeImage_GetPageCount(multiBmp);
-        ofLogNotice() << "Gif loaded, found " << frameCount << " frames: ";
+        ofLogNotice() << "Gif loaded: " << frameCount << " frames.";
 
         // here we process the first frame
         for (int i = 0; i < frameCount; i++) {
@@ -78,9 +78,15 @@ void ofxGifImage::save(string filename, bool bAbsolutePath)
     FIMULTIBITMAP* multi = FreeImage_OpenMultiBitmap(FIF_GIF, savefilename.c_str(), TRUE, FALSE);
     for (unsigned int i = 0; i < frames.size(); i++) {
         GifFrame currentFrame = frames[i];
-        encodeFrame(currentFrame, multi);
+        encodeFrame(currentFrame, multi, i);
     }
+    if (previousBmp) {
+        FreeImage_Unload(previousBmp);
+        previousBmp = nullptr;
+    }
+
     FreeImage_CloseMultiBitmap(multi);
+    ofLogNotice() << "Gif saved: " << frames.size() << " frames.";
 }
 
 //-----------------------------------------------------------------------
@@ -213,15 +219,9 @@ void ofxGifImage::setDither(GifDitherType type)
 }
 
 //-----------------------------------------------------------------------
-void ofxGifImage::setTransparency(bool value)
+void ofxGifImage::setTransparencyOptimisation(bool value)
 {
-    bSetTransparency = value;
-}
-
-//-----------------------------------------------------------------------
-void ofxGifImage::setTransparentColour(ofColor c)
-{
-    transparentColour = c;
+    bSetTransparencyOptimisation = value;
 }
 
 //-----------------------------------------------------------------------
@@ -246,14 +246,25 @@ void ofxGifImage::getMetadata(FIBITMAP* bmp)
                 c.set(globalPalette[i].rgbRed, globalPalette[i].rgbGreen, globalPalette[i].rgbBlue);
                 palette.push_back(c);
             }
+            ofLogVerbose() << "Using Global Palette.";
         }
+    } else {
+        ofLogVerbose() << "No Global Palette.";
     }
 
-    RGBQUAD bgColor;
-    if (FreeImage_GetBackgroundColor(bmp, &bgColor)) {
-        backgroundColour = ofColor(bgColor.rgbRed, bgColor.rgbGreen, bgColor.rgbBlue);
-        ofLogVerbose() << "Background colour: " << backgroundColour;
+    if (FreeImage_HasBackgroundColor(bmp)) {
+        RGBQUAD bgColor;
+        if (FreeImage_GetBackgroundColor(bmp, &bgColor)) {
+            backgroundColour = ofColor(bgColor.rgbRed, bgColor.rgbGreen, bgColor.rgbBlue);
+            ofLogVerbose() << "Background colour: " << backgroundColour;
+        }
+    } else {
+        ofLogVerbose() << "No background colour set.";
     }
+
+    ofLogVerbose() << "Is transparent? " << FreeImage_IsTransparent(bmp);
+    ofLogVerbose() << "Transparency count: " << FreeImage_GetTransparencyCount(bmp);
+    ofLogVerbose() << "Transparent index: " << FreeImage_GetTransparentIndex(bmp);
 }
 
 //-----------------------------------------------------------------------
@@ -294,6 +305,18 @@ void ofxGifImage::decodeFrame(FIBITMAP* bmp)
             ofLogVerbose() << "Frame duration: " << frame.duration;
         } else {
             ofLogVerbose() << "GIF frame duration tag not found ";
+        }
+    }
+
+    tag = nullptr;
+    if (FreeImage_GetMetadata(FIMD_ANIMATION, bmp, "NoLocalPalette", &tag)) {
+        if (tag != nullptr) {
+            uint8_t noLocalPalette = *(uint8_t*)FreeImage_GetTagValue(tag);
+            if (noLocalPalette == 0x00) {
+                ofLogVerbose() << "Local Palette exists.";
+            } else {
+                ofLogVerbose() << "No Local Palette.";
+            }
         }
     }
 
@@ -397,12 +420,14 @@ void ofxGifImage::decodeFrame(FIBITMAP* bmp)
 }
 
 //-----------------------------------------------------------------------
-void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
+void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi, unsigned int pageNum)
 {
     FIBITMAP* bmp = NULL;
 
+    ofLogVerbose() << "Encoding frame: " << pageNum << "-----------------------------------------------------";
+
     // get the pixel format
-    ofLogVerbose() << "Encoding frame of pixel format: " << getPixelFormatString(frame.pixels);
+    ofLogVerbose() << "Pixel format: " << getPixelFormatString(frame.pixels);
 
 #ifdef TARGET_LITTLE_ENDIAN
     if ((frame.pixels.getPixelFormat() == OF_PIXELS_RGBA) || (frame.pixels.getPixelFormat() == OF_PIXELS_RGB)) {
@@ -410,7 +435,7 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
     }
 #endif
 
-    // force RGB to save space - needs to be after the swapRgb. Make optional?
+    // force RGB
     frame.pixels.setNumChannels(3);
     frame.bpp = frame.pixels.getBitsPerPixel();
 
@@ -420,30 +445,60 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
     FIBITMAP* ditheredBmp = nullptr;
     FIBITMAP* processedBmp = nullptr;
 
-    //if (frame.bpp == 24)
-    //{
-    //    quantizedBmp = FreeImage_ColorQuantizeEx(bmp, FIQ_NNQUANT, numColours);
-    //} else {
-    quantizedBmp = FreeImage_ColorQuantizeEx(bmp, FIQ_WUQUANT, numColours);
-    //}
+    int paletteSize = numColours;
+    if (paletteSize == 256) {
+        paletteSize = 255; //reserve last index for transparency
+    }
+
+    if (previousBmp != nullptr) {
+        RGBQUAD* Palette = FreeImage_GetPalette(previousBmp);
+        quantizedBmp = FreeImage_ColorQuantizeEx(bmp, FIQ_NNQUANT, paletteSize, paletteSize, Palette);
+    } else {
+        quantizedBmp = FreeImage_ColorQuantizeEx(bmp, FIQ_NNQUANT, paletteSize, 0, nullptr);
+    }
+
     processedBmp = quantizedBmp;
 
-    // set transparency
-    if (bSetTransparency) {
-        RGBQUAD* Palette = FreeImage_GetPalette(processedBmp);
-        BYTE Transparency[numColours];
-        for (unsigned i = 0; i < numColours; i++) {
-            Transparency[i] = 0xFF;
-            unsigned char r = transparentColour.r;
-            unsigned char g = transparentColour.g;
-            unsigned char b = transparentColour.b;
-            if ((Palette[i].rgbRed >= r) && (Palette[i].rgbGreen == g) && (Palette[i].rgbBlue == b)) {
-                Transparency[i] = 0x00;
+    if (previousBmp != nullptr) {
+        // make pixels identical to last frame transparent
+        if (bSetTransparencyOptimisation) {
+            if (FreeImage_GetBPP(quantizedBmp) == 8) {
+                for (unsigned int y = 0; y < FreeImage_GetHeight(quantizedBmp); y++) {
+                    BYTE* bits = (BYTE*)FreeImage_GetScanLine(quantizedBmp, y);
+                    BYTE* bits2 = (BYTE*)FreeImage_GetScanLine(previousBmp, y);
+                    for (unsigned int x = 0; x < FreeImage_GetWidth(quantizedBmp); x++) {
+                        if (bits[x] == bits2[x]) {
+                            bits[x] = 255;
+                        }
+                    }
+                }
             }
         }
-        // set the tranparency table
-        FreeImage_SetTransparencyTable(processedBmp, Transparency, numColours);
     }
+
+    if (previousBmp) {
+        FreeImage_Unload(previousBmp);
+        previousBmp = nullptr;
+    }
+    if (quantizedBmp) {
+        previousBmp = FreeImage_Clone(quantizedBmp);
+    }
+
+    // enable transparency optimisation
+    if (bSetTransparencyOptimisation && (pageNum > 0)) {
+        RGBQUAD* Palette = FreeImage_GetPalette(processedBmp);
+
+        Palette[255].rgbRed = 0;
+        Palette[255].rgbGreen = 0;
+        Palette[255].rgbBlue = 0;
+
+        FreeImage_SetTransparentIndex(processedBmp, 255);
+    }
+
+    ofLogVerbose() << "Is transparent? " << FreeImage_IsTransparent(processedBmp);
+    ofLogVerbose() << "Transparency count: " << FreeImage_GetTransparencyCount(processedBmp);
+    ofLogVerbose() << "Transparent index: " << FreeImage_GetTransparentIndex(processedBmp);
+    ofLogVerbose() << "Get Transparent index: " << FreeImage_GetTransparentIndex(processedBmp);
 
     if (ditherMode > OFX_GIF_DITHER_NONE) {
         ditheredBmp = FreeImage_Dither(processedBmp, (FREE_IMAGE_DITHER)ditherMode);
@@ -456,9 +511,19 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
     // clear animation metadata
     FreeImage_SetMetadata(FIMD_ANIMATION, processedBmp, NULL, NULL);
 
-    // add animation tags
     FITAG* tag = FreeImage_CreateTag();
     if (tag) {
+        if (pageNum == 0) {
+            // set the global palette
+            RGBQUAD* Palette = FreeImage_GetPalette(processedBmp);
+            FreeImage_SetTagKey(tag, "GlobalPalette");
+            FreeImage_SetTagType(tag, FIDT_PALETTE);
+            FreeImage_SetTagCount(tag, numColours);
+            FreeImage_SetTagLength(tag, numColours * sizeof(RGBQUAD));
+            FreeImage_SetTagValue(tag, Palette);
+            FreeImage_SetMetadata(FIMD_ANIMATION, processedBmp, FreeImage_GetTagKey(tag), tag);
+        }
+        // add animation tags
         FreeImage_SetTagKey(tag, "FrameTime");
         FreeImage_SetTagType(tag, FIDT_LONG);
         FreeImage_SetTagCount(tag, 1);
@@ -466,12 +531,22 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
         FreeImage_SetTagValue(tag, &frameDuration);
         FreeImage_SetMetadata(FIMD_ANIMATION, processedBmp, FreeImage_GetTagKey(tag), tag);
 
+        // set the frame disposal method
         uint8_t disposal = frame.disposal;
         FreeImage_SetTagKey(tag, "DisposalMethod");
         FreeImage_SetTagType(tag, FIDT_BYTE);
         FreeImage_SetTagCount(tag, 1);
         FreeImage_SetTagLength(tag, 1);
         FreeImage_SetTagValue(tag, &disposal);
+        FreeImage_SetMetadata(FIMD_ANIMATION, processedBmp, FreeImage_GetTagKey(tag), tag);
+
+        // anything other than 0 will disable the local palette and use the global palette instead
+        uint8_t noLocalPalette = 1;
+        FreeImage_SetTagKey(tag, "NoLocalPalette");
+        FreeImage_SetTagType(tag, FIDT_BYTE);
+        FreeImage_SetTagCount(tag, 1);
+        FreeImage_SetTagLength(tag, 1);
+        FreeImage_SetTagValue(tag, &noLocalPalette);
         FreeImage_SetMetadata(FIMD_ANIMATION, processedBmp, FreeImage_GetTagKey(tag), tag);
 
         FreeImage_DeleteTag(tag);
@@ -486,6 +561,7 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi)
         FreeImage_Unload(quantizedBmp);
     if (ditheredBmp != nullptr)
         FreeImage_Unload(ditheredBmp);
+
     // no need to unload processedBmp, as it points to either of the above
 }
 

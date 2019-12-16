@@ -50,14 +50,14 @@ public:
     void clear();
     void setNumColours(int numColours);
     void setDither(GifDitherType dither);
-    void setTransparency(bool value);
-    void setTransparentColour(ofColor c);
+    void setTransparencyOptimisation(bool value);
+
 
 protected:
 
     void getMetadata(FIBITMAP* bmp);
     void decodeFrame(FIBITMAP* bmp);
-    void encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi);
+    void encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi, unsigned int pageNum);
     void updateFrameIndex();
     string getPixelFormatString(ofPixels p);
 
@@ -72,9 +72,9 @@ protected:
     int frameIndex;
     int numColours;
     int ditherMode;
-    bool bSetTransparency;
-    ofColor transparentColour;
+    bool bSetTransparencyOptimisation;
     string customFolder;
+    FIBITMAP* previousBmp;
 
 private:
 
