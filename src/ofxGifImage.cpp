@@ -14,7 +14,6 @@ ofxGifImage::ofxGifImage()
     customFolder = "~/Pictures/";
 #endif
     clear();
-    previousBmp = nullptr;
 }
 
 //-----------------------------------------------------------------------
@@ -103,7 +102,9 @@ void ofxGifImage::append(string filename)
     frame.top = 0;
     frame.left = 0;
     frame.disposal = GIF_DISPOSAL_LEAVE;
-    frame.tex.loadData(img.getPixels());
+    if (bUseTexture) {
+        frame.tex.loadData(img.getPixels());
+    }
 
     frames.push_back(frame);
 }
@@ -120,7 +121,9 @@ void ofxGifImage::append(ofPixels& pixels)
     frame.top = 0;
     frame.left = 0;
     frame.disposal = GIF_DISPOSAL_LEAVE;
-    frame.tex.loadData(pixels);
+    if (bUseTexture) {
+        frame.tex.loadData(pixels);
+    }
 
     frames.push_back(frame);
 }
@@ -178,7 +181,9 @@ void ofxGifImage::drawFrame(int frameNum, float x, float y, int w, int h)
         ofLog(OF_LOG_WARNING, "ofxGifFile::drawFrame frame out of bounds. not drawing");
         return;
     }
-    frames[frameNum].tex.draw(x, y, w, h);
+    if (bUseTexture) {
+        frames[frameNum].tex.draw(x, y, w, h);
+    }
 }
 
 //-----------------------------------------------------------------------
@@ -204,6 +209,10 @@ void ofxGifImage::clear()
     palette.clear();
     frameIndex = 0;
     lastDrawn = 0;
+    width = 0;
+    height = 0;
+    previousBmp = nullptr;
+    bUseTexture = true;
 }
 
 //-----------------------------------------------------------------------
@@ -373,7 +382,9 @@ void ofxGifImage::decodeFrame(FIBITMAP* bmp)
 
         if (frames.size() == 0) {
             frame.pixels = pix;
-            frame.tex.loadData(pix);
+            if (bUseTexture) {
+                frame.tex.loadData(pix);
+            }
             accumPx = pix; // we assume 1st frame is fully drawn`
         } else {
             // add new pixels to accumPx
@@ -409,7 +420,9 @@ void ofxGifImage::decodeFrame(FIBITMAP* bmp)
                 }
             }
             frame.pixels = accumPx;
-            frame.tex.loadData(accumPx);
+            if (bUseTexture) {
+                frame.tex.loadData(accumPx);
+            }
         }
 
         frames.push_back(frame);
@@ -565,6 +578,7 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi, unsigned in
     // no need to unload processedBmp, as it points to either of the above
 }
 
+//-----------------------------------------------------------------------
 string ofxGifImage::getPixelFormatString(ofPixels p)
 {
     ofPixelFormat pixformat = p.getPixelFormat();
@@ -586,4 +600,64 @@ string ofxGifImage::getPixelFormatString(ofPixels p)
         break;
     }
     return format;
+}
+
+//-----------------------------------------------------------------------
+unsigned int ofxGifImage::getFrameIndex()
+{
+    return frameIndex;
+}
+
+//-----------------------------------------------------------------------
+float ofxGifImage::getWidth() const
+{
+    return height;
+}
+
+//-----------------------------------------------------------------------
+float ofxGifImage::getHeight() const
+{
+    return width;
+}
+
+//-----------------------------------------------------------------------
+ofPixels& ofxGifImage::getPixels()
+{
+    return frames.at(frameIndex).pixels;
+}
+
+//-----------------------------------------------------------------------
+const ofPixels& ofxGifImage::getPixels() const
+{
+    return frames.at(frameIndex).pixels;
+}
+
+//-----------------------------------------------------------------------
+ofTexture& ofxGifImage::getTexture()
+{
+    return frames.at(frameIndex).tex;
+}
+
+//-----------------------------------------------------------------------
+const ofTexture& ofxGifImage::getTexture() const
+{
+    return frames.at(frameIndex).tex;
+}
+
+//-----------------------------------------------------------------------
+void ofxGifImage::setUseTexture(bool bUseTex)
+{
+    bUseTexture = bUseTex;
+}
+
+//-----------------------------------------------------------------------
+bool ofxGifImage::isUsingTexture() const
+{
+    return bUseTexture;
+}
+
+//-----------------------------------------------------------------------
+void ofxGifImage::draw(float x, float y, float w, float h) const
+{
+    draw(x, y, w, h);
 }

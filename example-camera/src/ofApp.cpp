@@ -16,7 +16,6 @@ void ofApp::setup()
     frameTimer = 0;
     gif.setDefaultFrameDuration(0.06f);
     gif.setNumColours(64);
-    gif.setTransparencyOptimisation(false);
     //gif.setDither(OFX_GIF_DITHER_CLUSTER6x6);
 }
 
@@ -73,7 +72,7 @@ void ofApp::keyPressed(int key)
     if (key == ' ') {
         bDoCapture = !bDoCapture;
         if (bDoCapture) {
-            gif.clear();
+            gif.clear();                
             frameTimer = 0;
         } else if (gif.getNumFrames() > 0) {
             string timestamp = ofGetTimestampString();
@@ -89,6 +88,7 @@ void ofApp::keyPressed(int key)
             gif.load(filename);
         }
     }
+
 }
 
 //--------------------------------------------------------------

@@ -33,9 +33,18 @@ struct GifFrame {
     GifFrameDisposal disposal;
 };
 
-class ofxGifImage {
+class ofxGifImage: public ofBaseImage {
 public:
     ofxGifImage();
+
+    ofTexture & getTexture();
+    const ofTexture & getTexture() const;
+    void setUseTexture(bool bUseTex);
+    bool isUsingTexture() const;
+    ofPixels & getPixels();
+    const ofPixels & getPixels() const;
+    float getHeight() const;
+    float getWidth() const;
 
     bool load(string filename);
     void save(string filename, bool bAbsolutePath = false);
@@ -43,10 +52,12 @@ public:
     void append(ofPixels& pixels);
     void draw(float x, float y);
     void draw(float x, float y, float w, float h);
+    void draw(float x, float y, float w, float h) const;
     void drawFrame(int frameNum, float x, float y);
     void drawFrame(int frameNum, float x, float y, int w, int h);
     void setDefaultFrameDuration(float duration);
     unsigned int getNumFrames();
+    unsigned int getFrameIndex();
     void clear();
     void setNumColours(int numColours);
     void setDither(GifDitherType dither);
@@ -63,13 +74,14 @@ protected:
 
     unsigned int width;
     unsigned int height;
+    bool bUseTexture;
     vector<GifFrame> frames;
     vector <ofColor> palette;
     ofPixels accumPx;
     float defaultFrameDuration;
     ofColor backgroundColour;
     float lastDrawn;
-    int frameIndex;
+    unsigned int frameIndex;
     int numColours;
     int ditherMode;
     bool bSetTransparencyOptimisation;
