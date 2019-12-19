@@ -36,6 +36,7 @@ struct GifFrame {
 class ofxGifImage: public ofBaseImage {
 public:
     ofxGifImage();
+    ~ofxGifImage();
 
     ofTexture & getTexture();
     const ofTexture & getTexture() const;
@@ -53,8 +54,8 @@ public:
     void draw(float x, float y);
     void draw(float x, float y, float w, float h);
     void draw(float x, float y, float w, float h) const;
-    void drawFrame(int frameNum, float x, float y);
-    void drawFrame(int frameNum, float x, float y, int w, int h);
+    void drawFrame(float x, float y, int frameNum);
+    void drawFrame(float x, float y, int w, int h, int frameNum);
     void setDefaultFrameDuration(float duration);
     unsigned int getNumFrames();
     unsigned int getFrameIndex();
@@ -62,6 +63,7 @@ public:
     void setNumColours(int numColours);
     void setDither(GifDitherType dither);
     void setTransparencyOptimisation(bool value);
+    ofColor getGlobalPalette(unsigned int index);
 
 
 protected:
@@ -71,6 +73,7 @@ protected:
     void encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi, unsigned int pageNum);
     void updateFrameIndex();
     string getPixelFormatString(ofPixels p);
+    void calculateTransparencyOptimisation(FIBITMAP* quantizedBmp, unsigned int pageNum);
 
     unsigned int width;
     unsigned int height;
@@ -87,6 +90,7 @@ protected:
     bool bSetTransparencyOptimisation;
     string customFolder;
     FIBITMAP* previousBmp;
+    RGBQUAD* globalPalette;
 
 private:
 
