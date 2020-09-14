@@ -204,8 +204,8 @@ void ofxGifImage::clear()
     height = 0;
     previousBmp = nullptr;
     bUseTexture = true;
-    if (globalPalette) {
-        free(globalPalette);
+    if (globalPalette != nullptr) {
+        delete[] globalPalette;
         globalPalette = nullptr;
     }
 }
@@ -348,7 +348,7 @@ void ofxGifImage::decodeFrame(FIBITMAP* bmp)
     }
 
     // Force all incoming frames to be RGBA
-    FIBITMAP* bmpConverted = NULL;
+    FIBITMAP* bmpConverted = nullptr;
     if (FreeImage_GetColorType(bmp) == FIC_PALETTE || FreeImage_GetBPP(bmp) < 8) {
         bmpConverted = FreeImage_ConvertTo32Bits(bmp);
         bmp = bmpConverted;
@@ -437,6 +437,11 @@ void ofxGifImage::decodeFrame(FIBITMAP* bmp)
         }
 
         frames.push_back(frame);
+
+        // FreeImage_ConvertTo32Bits() calls FreeImage_Allocate()
+        if (bmpConverted != nullptr) {
+            FreeImage_Unload(bmp);
+        }
 
     } else {
         ofLogError("ofxGifImage") << "decodeFrame() unable to get frame bits";
