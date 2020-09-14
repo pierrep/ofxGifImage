@@ -1,7 +1,7 @@
 #pragma once
 
-#include "FreeImage.h"
 #include "ofMain.h"
+#include "FreeImage.h"
 
 enum GifFrameDisposal {
     GIF_DISPOSAL_UNSPECIFIED,
