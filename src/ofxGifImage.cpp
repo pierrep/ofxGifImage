@@ -46,7 +46,61 @@ bool ofxGifImage::load(string filename)
 
         // num frames
         int frameCount = FreeImage_GetPageCount(multiBmp);
-        ofLogNotice() << "Gif loaded: " << frameCount << " frames.";
+        ofLogVerbose() << "Gif loaded: " << frameCount << " frames.";
+
+        // here we process the first frame
+        for (int i = 0; i < frameCount; i++) {
+            FIBITMAP* bmp = FreeImage_LockPage(multiBmp, i);
+            if (bmp) {
+                if (i == 0) {
+                    getMetadata(bmp);
+                    bLoaded = true;
+                }
+                ofLogVerbose() << "Decoding frame: " << i << " -------------";
+                decodeFrame(bmp);
+                FreeImage_UnlockPage(multiBmp, bmp, false);
+            } else {
+                ofLog(OF_LOG_ERROR, "Problem locking page while opening Gif.");
+            }
+        }
+        FreeImage_CloseMultiBitmap(multiBmp, 0);
+    } else {
+        ofLog(OF_LOG_ERROR, "Couldn't open Gif as multi-bitmap.");
+    }
+
+    return bLoaded;
+}
+
+//-----------------------------------------------------------------------
+bool ofxGifImage::load(ofBuffer buffer)
+{
+    bool bLoaded = false;
+    FIMULTIBITMAP* multiBmp = nullptr;
+    FREE_IMAGE_FORMAT filetype = FIF_UNKNOWN;
+    FIMEMORY* hmem = nullptr;
+
+    hmem = FreeImage_OpenMemory((unsigned char*) buffer.getData(), buffer.size());
+    if (hmem == nullptr){
+        ofLogError("ofxGifImage") << "load(): couldn't load image from ofBuffer, opening FreeImage memory failed";
+        return false;
+    }
+
+    filetype= FreeImage_GetFileTypeFromMemory(hmem);
+    if (filetype != FIF_GIF) {
+        ofLogError("ofImage") << "loadImage(): couldn't load image from ofBuffer, this is not a Gif file";
+        FreeImage_CloseMemory(hmem);
+        return bLoaded;
+    }
+
+    clear();
+
+    multiBmp = FreeImage_LoadMultiBitmapFromMemory(filetype, hmem, GIF_LOAD256);
+
+    if (multiBmp) {
+
+        // num frames
+        int frameCount = FreeImage_GetPageCount(multiBmp);
+        ofLogVerbose() << "Gif loaded: " << frameCount << " frames.";
 
         // here we process the first frame
         for (int i = 0; i < frameCount; i++) {

@@ -16,9 +16,11 @@ ofxThreadedGifLoader::~ofxThreadedGifLoader()
 {
     images_to_load_from_disk.close();
     images_to_update.close();
-    waitForThread(true);
     ofRemoveListener(ofEvents().update, this, &ofxThreadedGifLoader::update);
     ofRemoveListener(ofURLResponseEvent(), this, &ofxThreadedGifLoader::urlResponse);
+    stopThread();
+    waitForThread(true);
+    ofLogNotice() << "Destructed ofxThreadedGifLoader";
 }
 
 // Load an image from disk.

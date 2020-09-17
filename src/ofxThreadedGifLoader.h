@@ -27,7 +27,7 @@ private:
     // Entry to load.
     struct ofGifImageLoaderEntry {
         ofGifImageLoaderEntry() {
-            image = NULL;
+            image = nullptr;
         }
         
         ofGifImageLoaderEntry(ofxGifImage & pImage) {

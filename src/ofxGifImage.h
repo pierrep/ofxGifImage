@@ -48,6 +48,7 @@ public:
     float getWidth() const;
 
     bool load(string filename);
+    bool load(ofBuffer buffer);
     void save(string filename, bool bAbsolutePath = false);
     void append(string filename);
     void append(ofPixels& pixels);
