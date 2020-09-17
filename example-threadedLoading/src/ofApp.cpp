@@ -35,6 +35,10 @@ void ofApp::draw(){
         images[i].draw(x*128,y*128, 128,128);
     }
 
+    if(loader.getProgress() < 1.0f) {
+    loader.draw();
+    }
+
     // draw the FPS
     ofDrawRectangle(0,ofGetHeight()-20,30,20);
 
