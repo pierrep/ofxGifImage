@@ -6,6 +6,8 @@
 //-----------------------------------------------------------------------
 ofxGifImage::ofxGifImage()
 {
+    clear();
+
     numColours = 256;
     ditherMode = OFX_GIF_DITHER_NONE;
     defaultFrameDuration = OFX_GIF_DEFAULT_FRAME_DELAY;
@@ -13,8 +15,8 @@ ofxGifImage::ofxGifImage()
     globalPalette = nullptr;
 #ifdef SAVE_TO_CUSTOM_FOLDER
     customFolder = "~/Pictures/";
-#endif
-    clear();
+#endif    
+    bUseTexture = true;
 }
 
 ofxGifImage::~ofxGifImage()
@@ -193,6 +195,27 @@ void ofxGifImage::drawFrame(float x, float y, int w, int h, int frameNum)
 }
 
 //-----------------------------------------------------------------------
+void ofxGifImage::update()
+{
+//    width = pixels.getWidth();
+//    height = pixels.getHeight();
+//    bpp = pixels.getBitsPerPixel();
+//    type = pixels.getImageType();
+//    if (pixels.isAllocated() && bUseTexture){
+//        int glInternalFormat = ofGetGLInternalFormat(pixels);
+//        if(!tex.isAllocated() || tex.getWidth() != width || tex.getHeight() != height || tex.getTextureData().glInternalFormat != glInternalFormat){
+//            tex.allocate(pixels);
+//        }else{
+//            tex.loadData(pixels);
+//        }
+//    }
+    for(int i = 0; i < frames.size(); i++ ) {
+        frames[i].tex.loadData(frames[i].pixels);
+    }
+
+}
+
+//-----------------------------------------------------------------------
 void ofxGifImage::clear()
 {
     accumPx.clear();
@@ -203,7 +226,6 @@ void ofxGifImage::clear()
     width = 0;
     height = 0;
     previousBmp = nullptr;
-    bUseTexture = true;
     if (globalPalette != nullptr) {
         delete[] globalPalette;
         globalPalette = nullptr;

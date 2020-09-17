@@ -56,6 +56,7 @@ public:
     void draw(float x, float y, float w, float h) const;
     void drawFrame(float x, float y, int frameNum);
     void drawFrame(float x, float y, int w, int h, int frameNum);
+    void update();
     void setDefaultFrameDuration(float duration);
     unsigned int getNumFrames();
     unsigned int getFrameIndex();
