@@ -4,8 +4,8 @@
 void ofApp::setup(){
 
     ofDirectory dir;
-    dir.listDir("");
-    dir.allowExt("gif");
+	dir.allowExt("gif");
+    dir.listDir("");   
     dir.sort();
 
     unsigned int num_files = dir.size() + 1;
