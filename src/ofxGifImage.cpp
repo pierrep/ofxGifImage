@@ -6,13 +6,14 @@
 //-----------------------------------------------------------------------
 ofxGifImage::ofxGifImage()
 {
+    globalPalette = nullptr;
+
     clear();
 
     numColours = 256;
     ditherMode = OFX_GIF_DITHER_NONE;
     defaultFrameDuration = OFX_GIF_DEFAULT_FRAME_DELAY;
     bSetTransparencyOptimisation = false;
-    globalPalette = nullptr;
 #ifdef SAVE_TO_CUSTOM_FOLDER
     customFolder = "~/Pictures/";
 #endif    
