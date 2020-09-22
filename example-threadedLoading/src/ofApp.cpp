@@ -4,8 +4,8 @@
 void ofApp::setup(){
 
     ofDirectory dir;
-	dir.allowExt("gif");
-    dir.listDir("");   
+    dir.allowExt("gif");
+    dir.listDir("");
     dir.sort();
 
     unsigned int num_files = dir.size() + 1;
@@ -13,13 +13,15 @@ void ofApp::setup(){
     for(unsigned int i = 0; i < num_files; i++) {
         ofxGifImage gif;
         images.push_back(gif);
-    }    
+    }
 
     for(unsigned int i = 0; i < dir.size(); i++) {
         loader.loadFromDisk(images[i], dir.getPath(i));
     }
 
-    loader.loadFromURL(images[num_files-1],"https://blog.loomly.com/wp-content/uploads/2019/06/earth.gif");
+    webImage.setUseTexture(false);
+    bLoadWebImage = false;
+    bReloadImages = false;
 
 }
 
@@ -42,7 +44,28 @@ void ofApp::draw(){
     }
 
     if(loader.getProgress() < 1.0f) {
-    loader.draw();
+        loader.draw();
+    }
+
+    if(webImage.isUsingTexture()) {
+        webImage.draw(0,256,128,128);
+        bLoadWebImage = false;
+    }
+
+    if(bLoadWebImage) {
+        ofDrawBitmapString("Loading image from web",10, 256);
+    }
+
+    if(bReloadImages) {
+        ofDirectory dir;
+        dir.allowExt("gif");
+        dir.listDir("");
+        dir.sort();
+
+        for(unsigned int i = 0; i < dir.size(); i++) {
+            loader.loadFromDisk(images[i], dir.getPath(i));
+        }
+        bReloadImages = false;
     }
 
     // draw the FPS
@@ -57,11 +80,15 @@ void ofApp::exit(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-
+    webImage.setUseTexture(false);
+    urlloader.loadFromURL(webImage,"https://blog.loomly.com/wp-content/uploads/2019/06/earth.gif");
+    bLoadWebImage = true;
+    bReloadImages = true;
 }
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key){
+
 
 }
 

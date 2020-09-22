@@ -25,6 +25,10 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
 
         ofxThreadedGifLoader loader;
+        ofxThreadedGifLoader urlloader;
         vector<ofxGifImage> images;
+        ofxGifImage webImage;
         int total;
+        bool bLoadWebImage;
+        bool bReloadImages;
 };
