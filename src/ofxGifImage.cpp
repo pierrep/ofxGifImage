@@ -207,7 +207,7 @@ unsigned int ofxGifImage::getNumFrames()
 void ofxGifImage::draw(float x, float y)
 {
     if (frames.size() == 0) {
-        ofLogWarning("ofxGifImage") << "No frames to draw!";
+        ofLogVerbose("ofxGifImage") << "No frames to draw!";
         return;
     }
 
@@ -219,7 +219,7 @@ void ofxGifImage::draw(float x, float y)
 void ofxGifImage::draw(float x, float y, float w, float h)
 {
     if (frames.size() == 0) {
-        ofLogWarning("ofxGifImage") << "No frames to draw!";
+        ofLogVerbose("ofxGifImage") << "No frames to draw!";
         return;
     }
 

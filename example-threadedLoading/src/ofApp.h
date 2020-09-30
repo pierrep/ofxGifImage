@@ -30,5 +30,6 @@ class ofApp : public ofBaseApp{
         ofxGifImage webImage;
         int total;
         bool bLoadWebImage;
+        bool bLoadingWebImage;
         bool bReloadImages;
 };

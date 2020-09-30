@@ -3,5 +3,9 @@
 */bin/example*
 */build/
 example-save/bin/data/test.gif
+.DS_Store
+example-threadedLoading/Project.xcconfig
+example-threadedLoading/example-threadedLoading.xcodeproj/
+example-threadedLoading/openFrameworks-Info.plist
 
 

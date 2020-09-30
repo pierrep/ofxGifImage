@@ -20,13 +20,14 @@ ofxThreadedGifLoader::~ofxThreadedGifLoader()
     ofRemoveListener(ofURLResponseEvent(), this, &ofxThreadedGifLoader::urlResponse);
     stopThread();
     waitForThread(true);
-    ofLogNotice() << "Destructed ofxThreadedGifLoader";
+    ofLogVerbose() << "Destructed ofxThreadedGifLoader";
 }
 
 // Load an image from disk.
 //--------------------------------------------------------------
 void ofxThreadedGifLoader::loadFromDisk(ofxGifImage& image, string filename)
 {
+    image.clear();
     nextID++;
     ofGifImageLoaderEntry entry(image);
     entry.filename = filename;
@@ -84,7 +85,7 @@ void ofxThreadedGifLoader::urlResponse(ofHttpResponse& response)
         }
     } else {
         // log error.
-        ofLogError("ofxThreadedGifLoader") << "couldn't load url, response status: " << response.status;
+        ofLogError("ofxThreadedGifLoader") << "couldn't load url, response status: " << response.status << " URL: " << response.request.url;
         ofRemoveURLRequest(response.request.getId());
     }
 
