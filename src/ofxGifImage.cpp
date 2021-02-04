@@ -127,7 +127,7 @@ bool ofxGifImage::load(ofBuffer buffer)
 }
 
 //-----------------------------------------------------------------------
-void ofxGifImage::save(string filename, bool bAbsolutePath)
+bool ofxGifImage::save(string filename, bool bAbsolutePath)
 {
     string savefilename;
     if (bAbsolutePath) {
@@ -138,6 +138,10 @@ void ofxGifImage::save(string filename, bool bAbsolutePath)
 
     // create a multipage bitmap
     FIMULTIBITMAP* multi = FreeImage_OpenMultiBitmap(FIF_GIF, savefilename.c_str(), TRUE, FALSE);
+    if(multi == nullptr) {
+        ofLogError() << "Failed to save GIF";
+        return false;
+    }
     for (unsigned int i = 0; i < frames.size(); i++) {
         GifFrame currentFrame = frames[i];
         encodeFrame(currentFrame, multi, i);
@@ -149,6 +153,7 @@ void ofxGifImage::save(string filename, bool bAbsolutePath)
 
     FreeImage_CloseMultiBitmap(multi);
     ofLogNotice() << "Gif saved: " << frames.size() << " frames.";
+    return true;
 }
 
 //-----------------------------------------------------------------------
