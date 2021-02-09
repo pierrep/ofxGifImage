@@ -22,6 +22,7 @@ ofxGifImage::ofxGifImage()
 
 ofxGifImage::~ofxGifImage()
 {
+    ofLogVerbose() << "Destructed ofxGifImage";
     clear();
 }
 
@@ -298,6 +299,7 @@ void ofxGifImage::clear()
     height = 0;
     previousBmp = nullptr;
     if (globalPalette != nullptr) {
+        ofLogVerbose() << "Deleting globalPalette: " << globalPalette;
         delete[] globalPalette;
         globalPalette = nullptr;
     }
@@ -615,6 +617,7 @@ void ofxGifImage::encodeFrame(GifFrame& frame, FIMULTIBITMAP* multi, unsigned in
 
             globalPalette = new RGBQUAD[paletteSize];
             memcpy(globalPalette, palette, paletteSize * sizeof(RGBQUAD));
+            ofLogVerbose() << "Global Palette: " << globalPalette << " allocated";
         }
         // add animation tags
         FreeImage_SetTagKey(tag, "FrameTime");
