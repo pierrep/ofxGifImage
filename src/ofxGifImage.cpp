@@ -735,13 +735,13 @@ unsigned int ofxGifImage::getFrameIndex()
 //-----------------------------------------------------------------------
 float ofxGifImage::getWidth() const
 {
-    return height;
+    return width;
 }
 
 //-----------------------------------------------------------------------
 float ofxGifImage::getHeight() const
 {
-    return width;
+    return height;
 }
 
 //-----------------------------------------------------------------------
