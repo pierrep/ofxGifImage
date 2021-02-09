@@ -129,6 +129,11 @@ bool ofxGifImage::load(ofBuffer buffer)
 //-----------------------------------------------------------------------
 bool ofxGifImage::save(string filename, bool bAbsolutePath)
 {
+    if(frames.size() == 0) {
+        ofLogError("ofxGifImage") << "Can't save an empty GIF, need to add some frames first...";
+        return false;
+    }
+
     string savefilename;
     if (bAbsolutePath) {
         savefilename = filename;
@@ -139,11 +144,17 @@ bool ofxGifImage::save(string filename, bool bAbsolutePath)
     // create a multipage bitmap
     FIMULTIBITMAP* multi = FreeImage_OpenMultiBitmap(FIF_GIF, savefilename.c_str(), TRUE, FALSE);
     if(multi == nullptr) {
-        ofLogError() << "Failed to save GIF";
+        ofLogError("ofxGifImage") << "Failed to save GIF";
         return false;
     }
+    // set width and height
+    width = frames[0].width;
+    height = frames[0].height;
     for (unsigned int i = 0; i < frames.size(); i++) {
         GifFrame currentFrame = frames[i];
+        if((width != frames[i].width) && (height != frames[0].height)) {
+            ofLogWarning("ofxGifImage") << "GIF frames aren't all the same size, GIF file width and height may vary";
+        }
         encodeFrame(currentFrame, multi, i);
     }
     if (previousBmp) {
@@ -152,7 +163,7 @@ bool ofxGifImage::save(string filename, bool bAbsolutePath)
     }
 
     FreeImage_CloseMultiBitmap(multi);
-    ofLogNotice() << "Gif saved: " << frames.size() << " frames.";
+    ofLogNotice("ofxGifImage") << "Gif saved. Width: " << width << " Height: " << height << " Frames: " << frames.size();
     return true;
 }
 
@@ -351,7 +362,7 @@ void ofxGifImage::getMetadata(FIBITMAP* bmp)
             ofLogVerbose() << "Using Global Palette.";
         }
     } else {
-        ofLogVerbose() << "No Global Palette.";
+        ofLogVerbose("ofxGifImage") << "No Global Palette.";
     }
 
     if (FreeImage_HasBackgroundColor(bmp)) {

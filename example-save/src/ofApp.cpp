@@ -23,8 +23,9 @@ void ofApp::draw()
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key)
 {
-    if (key == ' ')
+    if (key == ' ') {
         gif.save("test.gif");
+    }
     if (key == 'a') {
         ofImage image;
         image.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
