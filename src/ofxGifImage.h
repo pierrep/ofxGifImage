@@ -66,6 +66,8 @@ public:
     void setDither(GifDitherType dither);
     void setTransparencyOptimisation(bool value);
     ofColor getGlobalPalette(unsigned int index);
+    void quantize(ofPixels &pix);
+    void quantize();
 
 
 protected:

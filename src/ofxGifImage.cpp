@@ -328,6 +328,79 @@ void ofxGifImage::setTransparencyOptimisation(bool value)
 }
 
 //-----------------------------------------------------------------------
+void ofxGifImage::quantize()
+{
+    for (unsigned int i = 0; i < frames.size(); i++) {
+        GifFrame currentFrame = frames[i];
+        quantize(currentFrame.pixels);
+        if (bUseTexture) {
+            currentFrame.tex.loadData(currentFrame.pixels);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------
+void ofxGifImage::quantize(ofPixels &pix)
+{
+    FIBITMAP* bmpConverted = NULL;
+
+    pix.swapRgb();			// should add this
+
+    unsigned char* pixels = pix.getData();
+    unsigned int width = pix.getWidth();
+    unsigned int height = pix.getHeight();
+    unsigned int bpp = pix.getBitsPerPixel();
+
+    FREE_IMAGE_TYPE freeImageType = FIT_BITMAP;		// not need to check, just use unsigned char
+    FIBITMAP* bmp = FreeImage_AllocateT(freeImageType, width, height, bpp);
+    unsigned char* bmpBits = FreeImage_GetBits(bmp);
+    if (bmpBits != NULL) {
+        int srcStride = width * pix.getBytesPerPixel();
+        int dstStride = FreeImage_GetPitch(bmp);
+        unsigned char* src = (unsigned char*)pixels;
+        unsigned char* dst = bmpBits;
+        for (int i = 0; i < (int)height; i++) {
+            memcpy(dst, src, srcStride);
+            src += srcStride;
+            dst += dstStride;
+        }
+    }
+    else {
+        ofLogError("ofImage") << "getBmpFromPixels(): unable to get FIBITMAP from ofPixels";
+    }
+
+    // ofPixels are top left, FIBITMAP is bottom left
+    //FreeImage_FlipVertical(bmp);
+    bpp = FreeImage_GetBPP(bmp);
+
+    // this will create a 256-color palette from the image for gif
+    FIBITMAP* convertedBmp;
+    convertedBmp = FreeImage_ColorQuantize(bmp, FIQ_NNQUANT);
+    //convertedBmp = FreeImage_ColorQuantizeEx(bmp, FIQ_NNQUANT, numColours, 0, nullptr);
+
+    //FreeImage_FlipVertical(convertedBmp);
+
+    bpp = FreeImage_GetBPP(convertedBmp);
+    unsigned int channels = (bpp / sizeof(unsigned char)) / 8;
+    unsigned int pitch = FreeImage_GetPitch(convertedBmp);
+
+    bmpBits = FreeImage_GetBits(convertedBmp);
+    if (bmpBits != NULL) {
+        pix.setFromAlignedPixels((unsigned char*)bmpBits, width, height, channels, pitch);
+    }
+    else {
+        ofLogError("ofImage") << "putBmpIntoPixels(): unable to set ofPixels from FIBITMAP";
+    }
+
+    FreeImage_Unload(bmp);
+
+    if (bmpConverted != NULL) {
+        FreeImage_Unload(bmpConverted);
+    }
+
+}
+
+//-----------------------------------------------------------------------
 void ofxGifImage::updateFrameIndex()
 {
     if (lastDrawn == 0) {
