@@ -36,6 +36,7 @@ struct GifFrame {
 class ofxGifImage: public ofBaseImage {
 public:
     ofxGifImage();
+    //ofxGifImage(const ofxGifImage&);
     ~ofxGifImage();
 
     ofTexture & getTexture();

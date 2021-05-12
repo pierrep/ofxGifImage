@@ -27,6 +27,27 @@ ofxGifImage::~ofxGifImage()
 }
 
 //-----------------------------------------------------------------------
+//ofxGifImage::ofxGifImage(const ofxGifImage& parent)
+//{
+//    globalPalette = nullptr;
+
+//    clear();
+
+//    cout << "copy constructor called" << endl;
+//    numColours = parent.numColours;
+//    ditherMode = parent.ditherMode;
+//    defaultFrameDuration = parent.defaultFrameDuration;
+//    bSetTransparencyOptimisation = parent.bSetTransparencyOptimisation;
+//#ifdef SAVE_TO_CUSTOM_FOLDER
+//    customFolder = parent.customFolder;
+//#endif
+//   bUseTexture = parent.bUseTexture;
+
+//   globalPalette = parent.globalPalette;
+
+//}
+
+//-----------------------------------------------------------------------
 bool ofxGifImage::load(string filename)
 {
     bool bLoaded = false;
@@ -267,6 +288,21 @@ void ofxGifImage::drawFrame(float x, float y, int w, int h, int frameNum)
 }
 
 //-----------------------------------------------------------------------
+void ofxGifImage::updateFrameIndex()
+{
+    if (lastDrawn == 0) {
+        lastDrawn = ofGetElapsedTimef();
+    }
+    if ((ofGetElapsedTimef() - lastDrawn) >= frames[frameIndex].duration) {
+        float diff = (ofGetElapsedTimef() - lastDrawn) - frames[frameIndex].duration;
+        lastDrawn = ofGetElapsedTimef() - diff;
+        frameIndex++;
+        frameIndex %= frames.size();
+    }
+    return;
+}
+
+//-----------------------------------------------------------------------
 void ofxGifImage::update()
 {
 //    width = pixels.getWidth();
@@ -281,9 +317,12 @@ void ofxGifImage::update()
 //            tex.loadData(pixels);
 //        }
 //    }
-    for(int i = 0; i < frames.size(); i++ ) {
-        frames[i].tex.loadData(frames[i].pixels);
-    }
+
+    updateFrameIndex();
+
+//    for(int i = 0; i < frames.size(); i++ ) {
+//        frames[i].tex.loadData(frames[i].pixels);
+//    }
 
 }
 
@@ -398,21 +437,6 @@ void ofxGifImage::quantize(ofPixels &pix)
         FreeImage_Unload(bmpConverted);
     }
 
-}
-
-//-----------------------------------------------------------------------
-void ofxGifImage::updateFrameIndex()
-{
-    if (lastDrawn == 0) {
-        lastDrawn = ofGetElapsedTimef();
-    }
-    if ((ofGetElapsedTimef() - lastDrawn) >= frames[frameIndex].duration) {
-        float diff = (ofGetElapsedTimef() - lastDrawn) - frames[frameIndex].duration;
-        lastDrawn = ofGetElapsedTimef() - diff;
-        frameIndex++;
-        frameIndex %= frames.size();
-    }
-    return;
 }
 
 //-----------------------------------------------------------------------
