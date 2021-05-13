@@ -249,7 +249,6 @@ void ofxGifImage::draw(float x, float y)
         return;
     }
 
-    updateFrameIndex();
     drawFrame(x, y, width, height, frameIndex);
 }
 
@@ -261,7 +260,6 @@ void ofxGifImage::draw(float x, float y, float w, float h)
         return;
     }
 
-    updateFrameIndex();
     drawFrame(x, y, w, h, frameIndex);
 }
 
@@ -305,25 +303,15 @@ void ofxGifImage::updateFrameIndex()
 //-----------------------------------------------------------------------
 void ofxGifImage::update()
 {
-//    width = pixels.getWidth();
-//    height = pixels.getHeight();
-//    bpp = pixels.getBitsPerPixel();
-//    type = pixels.getImageType();
-//    if (pixels.isAllocated() && bUseTexture){
-//        int glInternalFormat = ofGetGLInternalFormat(pixels);
-//        if(!tex.isAllocated() || tex.getWidth() != width || tex.getHeight() != height || tex.getTextureData().glInternalFormat != glInternalFormat){
-//            tex.allocate(pixels);
-//        }else{
-//            tex.loadData(pixels);
-//        }
-//    }
-
     updateFrameIndex();
+}
 
-//    for(int i = 0; i < frames.size(); i++ ) {
-//        frames[i].tex.loadData(frames[i].pixels);
-//    }
-
+//-----------------------------------------------------------------------
+void ofxGifImage::updateTextures()
+{
+    for(int i = 0; i < frames.size(); i++ ) {
+        frames[i].tex.loadData(frames[i].pixels);
+    }
 }
 
 //-----------------------------------------------------------------------

@@ -59,6 +59,7 @@ public:
     void drawFrame(float x, float y, int frameNum);
     void drawFrame(float x, float y, int w, int h, int frameNum);
     void update();
+    void updateTextures();
     void setDefaultFrameDuration(float duration);
     unsigned int getNumFrames();
     unsigned int getFrameIndex();

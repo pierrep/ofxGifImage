@@ -11,6 +11,7 @@ void ofApp::setup()
 //--------------------------------------------------------------
 void ofApp::update()
 {
+    gif.update(); // this needs to be called for the Gif to animate, otherwise it will just show the first frame
 }
 
 //--------------------------------------------------------------

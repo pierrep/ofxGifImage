@@ -8,7 +8,7 @@ void ofApp::setup(){
     dir.listDir("");
     dir.sort();
 
-    unsigned int num_files = dir.size() + 1;
+    unsigned int num_files = dir.size();
 
     for(unsigned int i = 0; i < num_files; i++) {
         ofxGifImage gif;
@@ -21,45 +21,21 @@ void ofApp::setup(){
 
     webImage.setUseTexture(false);
     bLoadWebImage = false;
-    bReloadImages = false;
-    bLoadingWebImage = false;
 
+    bLoadingWebImage = false;
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::draw(){
-
-    // draw the images.
-    ofSetColor(255);
-    for(unsigned int i = 0; i < images.size(); ++i) {
-        int x = (i%8);
-        int y = (i/8);
+    for(unsigned int i = 0; i < images.size(); i++) {
         if(images[i].isUsingTexture()) {
-            images[i].draw(x*128,y*128, 128,128);
+            images[i].update();
         }
     }
 
-    if(loader.getProgress() < 1.0f) {
-        loader.draw();
-    }
-
-    if(bLoadWebImage){
-        bLoadingWebImage = true;    urlloader.loadFromURL(webImage,"https://blog.loomly.com/wp-content/uploads/2019/06/earth.gif");
-        bLoadWebImage = false;
-    }
     if(webImage.isUsingTexture())
     {
-        webImage.draw(0,256,128,128);
-        bLoadingWebImage = false;
-    }
-
-    if(bLoadingWebImage) {
-        ofDrawBitmapString("Loading image from web",10, 256);
+        webImage.update();
     }
 
     if(bReloadImages) {
@@ -73,10 +49,49 @@ void ofApp::draw(){
         }
         bReloadImages = false;
     }
+}
+
+//--------------------------------------------------------------
+void ofApp::draw(){
+
+    // draw the local images.
+    ofSetColor(255);
+    for(unsigned int i = 0; i < images.size(); ++i) {
+        int x = (i%8);
+        int y = (i/8);
+        if(images[i].isUsingTexture()) {
+            images[i].draw(x*128,y*128, 128,128);
+        }
+    }
+
+    if(loader.getProgress() < 1.0f) {
+        // draw progress bar
+        loader.draw();
+    }
+
+    if(bLoadWebImage){
+        bLoadingWebImage = true;
+        urlloader.loadFromURL(webImage,"https://blog.loomly.com/wp-content/uploads/2019/06/earth.gif");
+        bLoadWebImage = false;
+    }
+
+    if(webImage.isUsingTexture())
+    {
+        //draw the web image
+        ofSetColor(255);
+        webImage.draw(0,256,128,128);
+        bLoadingWebImage = false;
+    }
+
+    if(bLoadingWebImage) {
+        ofDrawBitmapString("Loading image from web",10, 256);
+    }
 
     // draw the FPS
     ofSetColor(200,200,255);
-    ofDrawBitmapString("FPS: " + ofToString(ofGetFrameRate(),0),20,ofGetHeight()-20);
+    ofDrawBitmapString("Hit spacebar to load a GIF from the web ",20,ofGetHeight()-60);
+    ofDrawBitmapString("Hit 'r' to reload local images ",20,ofGetHeight()-40);
+    ofDrawBitmapString("FPS: " + ofToString(ofGetFrameRate()),20,ofGetHeight()-20);
 }
 
 //--------------------------------------------------------------
@@ -86,9 +101,14 @@ void ofApp::exit(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-    webImage.setUseTexture(false);
-    bLoadWebImage = true;
-    bReloadImages = true;
+    if(key == ' ') {
+        webImage.setUseTexture(false);
+        bLoadWebImage = true;
+    }
+
+    if(key == 'r') {
+        bReloadImages = true;
+    }
 }
 
 //--------------------------------------------------------------

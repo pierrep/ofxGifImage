@@ -102,8 +102,8 @@ void ofxThreadedGifLoader::update(ofEventArgs& a)
     // Load 1 image per update so we don't block the gl thread for too long
     ofGifImageLoaderEntry entry;
     if (images_to_update.tryReceive(entry)) {
+        entry.image->updateTextures();
         entry.image->setUseTexture(true);
-        entry.image->update();
         numEntries--;
         if (numEntries == 0)
             totalEntries = 0;
