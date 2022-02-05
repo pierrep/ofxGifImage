@@ -18,6 +18,8 @@ ofxGifImage::ofxGifImage()
     customFolder = "~/Pictures/";
 #endif    
     bUseTexture = true;
+    loopMode = OF_LOOP_NORMAL;
+    bIsPlaying = false;
 }
 
 ofxGifImage::~ofxGifImage()
@@ -242,6 +244,12 @@ unsigned int ofxGifImage::getNumFrames()
 }
 
 //-----------------------------------------------------------------------
+void ofxGifImage::setLoopState(ofLoopType state)
+{
+    loopMode = state;
+}
+
+//-----------------------------------------------------------------------
 void ofxGifImage::draw(float x, float y)
 {
     if (frames.size() == 0) {
@@ -303,7 +311,17 @@ void ofxGifImage::updateFrameIndex()
 //-----------------------------------------------------------------------
 void ofxGifImage::update()
 {
-    updateFrameIndex();
+
+    if(bIsPlaying) {
+        if(frameIndex < (getNumFrames()-1)) {
+            updateFrameIndex();
+        } else {
+            if(loopMode == OF_LOOP_NORMAL) {
+                updateFrameIndex();
+            }
+        }
+    }
+
 }
 
 //-----------------------------------------------------------------------

@@ -12,6 +12,7 @@ void ofApp::setup(){
 
     for(unsigned int i = 0; i < num_files; i++) {
         ofxGifImage gif;
+        gif.play();
         images.push_back(gif);
     }
 
@@ -19,6 +20,7 @@ void ofApp::setup(){
         loader.loadFromDisk(images[i], dir.getPath(i));
     }
 
+    webImage.play();
     webImage.setUseTexture(false);
     bLoadWebImage = false;
 

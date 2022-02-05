@@ -90,6 +90,7 @@ void ofApp::keyPressed(int key)
             gif.save(filename);
 #endif
             gif.load(filename);
+            gif.play();
         }
     }
 

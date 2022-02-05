@@ -61,6 +61,7 @@ public:
     void update();
     void updateTextures();
     void setDefaultFrameDuration(float duration);
+    void setLoopState(ofLoopType state);
     unsigned int getNumFrames();
     unsigned int getFrameIndex();
     void clear();
@@ -70,6 +71,10 @@ public:
     ofColor getGlobalPalette(unsigned int index);
     void quantize(ofPixels &pix);
     void quantize();
+    void play() {bIsPlaying = true;}
+    void playFromStart() {bIsPlaying = true; frameIndex = 0;}
+    void stop() {bIsPlaying = false; frameIndex = 0;}
+    void pause() {bIsPlaying = false;}
 
 
 protected:
@@ -91,6 +96,8 @@ protected:
     ofColor backgroundColour;
     float lastDrawn;
     unsigned int frameIndex;
+    ofLoopType loopMode;
+    bool bIsPlaying;
     int numColours;
     int ditherMode;
     bool bSetTransparencyOptimisation;

@@ -6,6 +6,7 @@ void ofApp::setup()
     ofSetLogLevel(OF_LOG_VERBOSE);
     bLoaded = gif.load("cowboy.gif");
     imgNum = 0;
+    gif.play();
 }
 
 //--------------------------------------------------------------
