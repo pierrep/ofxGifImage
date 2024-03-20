@@ -72,7 +72,7 @@ public:
     void quantize(ofPixels &pix);
     void quantize();
     void play() {bIsPlaying = true;}
-    void playFromStart() {bIsPlaying = true; frameIndex = 0; lastDrawn = 0}
+    void playFromStart() {bIsPlaying = true; frameIndex = 0; lastDrawn = 0;}
     void stop() {bIsPlaying = false; frameIndex = 0;}
     void pause() {bIsPlaying = false;}
 
